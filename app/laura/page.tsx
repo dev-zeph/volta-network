@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { displayName, getFounder } from "@/lib/auth";
 import { timeAgo } from "@/lib/time";
 import { Header } from "@/components/Header";
+import { ListControls, Pager, readQuery, slicePage, type RawQuery } from "@/components/Pager";
 
 export const metadata = { title: "Laura's view | Volta Network" };
 
@@ -17,7 +18,7 @@ type Row = {
   talk_requests: { id: string }[];
 };
 
-export default async function LauraPage() {
+export default async function LauraPage({ searchParams }: { searchParams: Promise<RawQuery> }) {
   const me = await getFounder();
   if (!me) redirect("/signin");
   if (!me.is_admin) redirect("/");
@@ -26,13 +27,16 @@ export default async function LauraPage() {
     .from("posts")
     .select("id,kind,body,created_at,author_email,author:founders!author_email(name),comments(id),talk_requests(id)")
     .order("created_at", { ascending: false });
-  const rows = (data ?? []) as unknown as Row[];
-  const total = rows.length;
-  const engaged = rows.filter((r) => r.comments.length > 0 || r.talk_requests.length > 0).length;
-  const talks = rows.reduce((n, r) => n + r.talk_requests.length, 0);
+  const all = (data ?? []) as unknown as Row[];
+  const total = all.length;
+  const engaged = all.filter((r) => r.comments.length > 0 || r.talk_requests.length > 0).length;
+  const talks = all.reduce((n, r) => n + r.talk_requests.length, 0);
+  const { rows, counts, pages, query } = slicePage(all, readQuery(await searchParams), (r) => r.comments.length + r.talk_requests.length);
 
   const stats = [
     ["Total posts", total],
+    ["Requests", counts.request],
+    ["Updates", counts.update],
     ["Posts with a comment or talk request", engaged],
     ["Total talk requests", talks],
   ] as const;
@@ -42,7 +46,7 @@ export default async function LauraPage() {
       <Header me={me} />
       <main className="wrap py-10">
         <h1 className="mb-6 text-4xl">Laura&apos;s view</h1>
-        <div className="mb-10 grid gap-5 md:grid-cols-3">
+        <div className="mb-10 grid gap-5 md:grid-cols-3 lg:grid-cols-5">
           {stats.map(([label, n]) => (
             <div key={label} className="card">
               <p className="label mb-3" style={{ color: "#56565e" }}>{label}</p>
@@ -50,6 +54,7 @@ export default async function LauraPage() {
             </div>
           ))}
         </div>
+        <ListControls base="/laura" q={query} counts={counts} />
         <div className="overflow-x-auto">
           <table className="t">
             <thead>
@@ -70,6 +75,7 @@ export default async function LauraPage() {
             </tbody>
           </table>
         </div>
+        <Pager base="/laura" q={query} pages={pages} />
       </main>
     </>
   );

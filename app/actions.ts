@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { LOGIN_TTL_MS, SESSION_COOKIE, displayName, getFounder, signToken } from "@/lib/auth";
+import { LOGIN_TTL_MS, SESSION_COOKIE, SESSION_TTL_MS, displayName, getFounder, signToken } from "@/lib/auth";
 import { emailEnabled, esc, layout, sendEmail } from "@/lib/email";
 
 export type Result = { ok: boolean; error?: string };
@@ -32,6 +32,21 @@ export async function requestLink(_prev: LinkState, formData: FormData): Promise
     const { data } = await db.from("founders").select("email").eq("email", email).maybeSingle();
     if (!data) {
       return { status: "error", message: "This email isn't on Volta's founder list yet. Ask Laura to add you." };
+    }
+  }
+  // Returning founders can skip the email by giving the startup name they signed up with.
+  const startup = clean(formData.get("startup"), 80).toLowerCase();
+  if (startup) {
+    const { data: known } = await db.from("founders").select("name, startup").eq("email", email).maybeSingle();
+    if (known?.name && known.startup?.trim().toLowerCase() === startup) {
+      (await cookies()).set(SESSION_COOKIE, signToken(email, "session", SESSION_TTL_MS), {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: SESSION_TTL_MS / 1000,
+      });
+      redirect("/");
     }
   }
   const token = signToken(email, "login", LOGIN_TTL_MS);

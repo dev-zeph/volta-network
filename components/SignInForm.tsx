@@ -27,13 +27,18 @@ export function SignInForm({ notice }: { notice?: string }) {
   return (
     <form action={action} className="grid gap-4">
       <h2 className="text-3xl">Sign in</h2>
-      <p style={{ color: "#56565e" }}>No password needed. We email you a link.</p>
+      <p style={{ color: "#56565e" }}>No password needed. First time here? We email you a link.</p>
       <div>
         <label htmlFor="email" className="label mb-2 block" style={{ color: "#56565e" }}>Email</label>
         <input id="email" name="email" type="email" required autoComplete="email" maxLength={254} className="input" placeholder="you@startup.ca" />
       </div>
+      <div>
+        <label htmlFor="startup" className="label mb-2 block" style={{ color: "#56565e" }}>Startup name (if you have signed in before)</label>
+        <input id="startup" name="startup" type="text" autoComplete="organization" maxLength={80} className="input" placeholder="Your startup" />
+        <p className="mt-2 text-sm" style={{ color: "#56565e" }}>Enter it to sign in right away, without the email.</p>
+      </div>
       {message && <p role="alert" className="error">{message}</p>}
-      <button type="submit" className="btn btn-primary" disabled={pending}>{pending ? "Sending..." : "Email me a sign-in link"}</button>
+      <button type="submit" className="btn btn-primary" disabled={pending}>{pending ? "Signing in..." : "Sign in"}</button>
     </form>
   );
 }

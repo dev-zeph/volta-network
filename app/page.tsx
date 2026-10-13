@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { MessageSquare } from "lucide-react";
+import { ChevronDown, MessageSquare } from "lucide-react";
 import { db } from "@/lib/db";
 import { displayName, getFounder } from "@/lib/auth";
 import { timeAgo } from "@/lib/time";
@@ -7,6 +7,7 @@ import { Header } from "@/components/Header";
 import { Composer } from "@/components/Composer";
 import { CommentForm } from "@/components/CommentForm";
 import { TalkButton } from "@/components/TalkButton";
+import { ListControls, Pager, SearchBar, readQuery, slicePage, type RawQuery } from "@/components/Pager";
 
 type Person = { name: string | null; startup: string | null; email: string } | null;
 type Post = {
@@ -35,7 +36,7 @@ function calendarUrl(me: { name: string | null; email: string }, post: Post) {
   return `https://calendar.google.com/calendar/render?${p.toString().replace(/\+/g, "%20")}`;
 }
 
-export default async function BoardPage() {
+export default async function BoardPage({ searchParams }: { searchParams: Promise<RawQuery> }) {
   const me = await getFounder();
   if (!me) redirect("/signin");
   if (!me.name) redirect("/welcome");
@@ -45,8 +46,41 @@ export default async function BoardPage() {
     .select(SELECT)
     .order("created_at", { ascending: false })
     .order("created_at", { referencedTable: "comments", ascending: true })
-    .limit(100);
-  const posts = (data ?? []) as unknown as Post[];
+    .limit(500);
+  const all = (data ?? []) as unknown as Post[];
+  const { rows: posts, counts, pages, query } = slicePage(
+    all,
+    readQuery(await searchParams),
+    (p) => p.comments.length,
+    (p) => [p.body, p.author?.name, p.author?.startup, ...p.comments.flatMap((c) => [c.body, c.author?.name])].filter(Boolean).join("\n"),
+  );
+  const nameOf = (p: { author: Person; author_email: string }) => displayName({ name: p.author?.name ?? null, email: p.author_email });
+  const kindTag = (post: Post) => (
+    <span className={`tag ${post.kind === "request" ? "tag-request" : "tag-update"}`}>{post.kind === "request" ? "Request" : "Update"}</span>
+  );
+  const commentList = (post: Post) =>
+    post.comments.length > 0 && (
+      <ul className="grid gap-3 border-t border-line pt-4" aria-label="Comments">
+        {post.comments.map((c) => (
+          <li key={c.id} className="bg-tint p-3">
+            <div className="mb-1 flex items-baseline justify-between gap-2">
+              <span className="text-sm font-semibold">{nameOf(c)}</span>
+              <time className="mono" dateTime={c.created_at}>{timeAgo(c.created_at)}</time>
+            </div>
+            <p className="whitespace-pre-wrap break-words text-sm">{c.body}</p>
+          </li>
+        ))}
+      </ul>
+    );
+  const actions = (post: Post) => (
+    <div className="grid gap-3 border-t border-line pt-4">
+      <CommentForm postId={post.id} />
+      {post.author_email !== me.email && <div><TalkButton postId={post.id} href={calendarUrl(me, post)} /></div>}
+      {post.comments.length === 0 && post.author_email === me.email && (
+        <p className="mono flex items-center gap-2"><MessageSquare size={14} aria-hidden /> No comments yet</p>
+      )}
+    </div>
+  );
 
   return (
     <>
@@ -59,49 +93,60 @@ export default async function BoardPage() {
         </div>
       </section>
       <main className="wrap py-10">
-        {posts.length === 0 ? (
+        {(all.length > 0 || query.q) && <SearchBar base="/" q={query} found={counts.all} />}
+        {counts.all > 0 && <ListControls base="/" q={query} counts={counts} layout />}
+        {all.length === 0 ? (
           <div className="card mx-auto max-w-lg text-center">
             <h2 className="mb-2 text-2xl">The board is quiet</h2>
             <p className="mb-5" style={{ color: "#56565e" }}>Be the first to share what you are working on, or ask the network a question.</p>
             <Composer variant="plain" />
+          </div>
+        ) : query.view === "list" ? (
+          <div className="grid gap-3">
+            {posts.map((post) => (
+              <details key={post.id} id={`post-${post.id}`} className="row card">
+                <summary>
+                  <span className="row-meta">
+                    {kindTag(post)}
+                    <span className="font-semibold">{nameOf(post)}</span>
+                    {post.author?.startup && <span className="label" style={{ color: "#56565e", fontWeight: 500 }}>{post.author.startup}</span>}
+                  </span>
+                  <span className="row-text">{post.body}</span>
+                  <span className="row-end">
+                    <span className="mono flex items-center gap-1"><MessageSquare size={14} aria-hidden /> {post.comments.length}<span className="sr-only"> comments</span></span>
+                    <time className="mono" dateTime={post.created_at}>{timeAgo(post.created_at)}</time>
+                    <ChevronDown size={18} aria-hidden className="row-chevron" />
+                  </span>
+                </summary>
+                <div className="mt-4 grid gap-4 border-t border-line pt-4">
+                  <p className="max-w-[80ch] whitespace-pre-wrap break-words">{post.body}</p>
+                  {commentList(post)}
+                  {actions(post)}
+                </div>
+              </details>
+            ))}
           </div>
         ) : (
           <div className="board">
             {posts.map((post) => (
               <article key={post.id} id={`post-${post.id}`} className="card flex flex-col gap-4">
                 <div className="flex items-center justify-between gap-3">
-                  <span className={`tag ${post.kind === "request" ? "tag-request" : "tag-update"}`}>{post.kind === "request" ? "Request" : "Update"}</span>
+                  {kindTag(post)}
                   <time className="mono" dateTime={post.created_at}>{timeAgo(post.created_at)}</time>
                 </div>
                 <div>
-                  <p className="font-semibold">{displayName({ name: post.author?.name ?? null, email: post.author_email })}</p>
+                  <p className="font-semibold">{nameOf(post)}</p>
                   {post.author?.startup && <p className="label" style={{ color: "#56565e", fontWeight: 500 }}>{post.author.startup}</p>}
                 </div>
                 <p className="whitespace-pre-wrap break-words">{post.body}</p>
-                {post.comments.length > 0 && (
-                  <ul className="grid gap-3 border-t border-line pt-4" aria-label="Comments">
-                    {post.comments.map((c) => (
-                      <li key={c.id} className="bg-tint p-3">
-                        <div className="mb-1 flex items-baseline justify-between gap-2">
-                          <span className="text-sm font-semibold">{displayName({ name: c.author?.name ?? null, email: c.author_email })}</span>
-                          <time className="mono" dateTime={c.created_at}>{timeAgo(c.created_at)}</time>
-                        </div>
-                        <p className="whitespace-pre-wrap break-words text-sm">{c.body}</p>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <div className="grid gap-3 border-t border-line pt-4">
-                  <CommentForm postId={post.id} />
-                  {post.author_email !== me.email && <div><TalkButton postId={post.id} href={calendarUrl(me, post)} /></div>}
-                  {post.comments.length === 0 && post.author_email === me.email && (
-                    <p className="mono flex items-center gap-2"><MessageSquare size={14} aria-hidden /> No comments yet</p>
-                  )}
-                </div>
+                {commentList(post)}
+                {actions(post)}
               </article>
             ))}
           </div>
         )}
+        {all.length > 0 && posts.length === 0 && !query.q && <p style={{ color: "#56565e" }}>Nothing here yet.</p>}
+        <Pager base="/" q={query} pages={pages} />
       </main>
     </>
   );
