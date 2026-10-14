@@ -131,7 +131,7 @@ async function getPost(id: string) {
   } | null;
 }
 
-export async function addComment(input: { postId: string; body: string }): Promise<Result> {
+export async function addComment(input: { postId: string; body: string; mentionEmail?: string }): Promise<Result> {
   const me = await getFounder();
   if (!me) return { ok: false, error: "Please sign in again." };
   const body = clean(input?.body, 2000);
@@ -139,7 +139,15 @@ export async function addComment(input: { postId: string; body: string }): Promi
   if (body.length > 2000) return { ok: false, error: "That is over 2000 characters." };
   const post = await getPost(input?.postId);
   if (!post) return { ok: false, error: "That post no longer exists." };
-  const { error } = await db.from("comments").insert({ post_id: post.id, author_email: me.email, body });
+  // Only Laura (admins) can @ a founder from her view.
+  let tagged: { email: string; name: string | null } | null = null;
+  if (input?.mentionEmail && me.is_admin) {
+    const { data } = await db.from("founders").select("email,name").eq("email", String(input.mentionEmail).toLowerCase()).maybeSingle();
+    if (!data) return { ok: false, error: "That founder could not be found." };
+    tagged = data;
+  }
+  const text = tagged ? `@${displayName(tagged)} ${body}` : body;
+  const { error } = await db.from("comments").insert({ post_id: post.id, author_email: me.email, body: text });
   if (error) return { ok: false, error: "Could not save that comment." };
   revalidatePath("/");
   revalidatePath("/laura");
@@ -152,15 +160,34 @@ export async function addComment(input: { postId: string; body: string }): Promi
       await sendEmail({
         to: post.author_email,
         subject: `${who} commented on your ${noun}`,
-        text: `${who} commented on your ${noun}:\n\n"${body}"\n\nSee it: ${href}`,
+        text: `${who} commented on your ${noun}:\n\n"${text}"\n\nSee it: ${href}`,
         html: layout(
           `${who} commented on your ${noun}`,
-          `<p style="margin:0;padding:12px 16px;border-left:3px solid #7c3aed;background:#f1ebfe;white-space:pre-wrap">${esc(body)}</p>`,
+          `<p style="margin:0;padding:12px 16px;border-left:3px solid #7c3aed;background:#f1ebfe;white-space:pre-wrap">${esc(text)}</p>`,
           { label: "View the conversation", href },
         ),
       });
     } catch (e) {
       console.error("[comment email]", e);
+    }
+  }
+  if (tagged && tagged.email !== me.email && tagged.email !== post.author_email) {
+    try {
+      const who = displayName(me);
+      const href = `${appUrl()}/#post-${post.id}`;
+      const quote = post.body.length > 200 ? post.body.slice(0, 200) + "..." : post.body;
+      await sendEmail({
+        to: tagged.email,
+        subject: `${who} tagged you on a post`,
+        text: `${who} tagged you on a post in Volta Network:\n\n"${quote}"\n\n${who}: "${body}"\n\nSee it: ${href}`,
+        html: layout(
+          `${who} tagged you on a post`,
+          `<p style="margin:0 0 12px;color:#56565e;white-space:pre-wrap">${esc(quote)}</p><p style="margin:0;padding:12px 16px;border-left:3px solid #7c3aed;background:#f1ebfe;white-space:pre-wrap">${esc(body)}</p>`,
+          { label: "View the post", href },
+        ),
+      });
+    } catch (e) {
+      console.error("[mention email]", e);
     }
   }
   return { ok: true };
