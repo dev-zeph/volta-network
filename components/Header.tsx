@@ -11,7 +11,7 @@ export function Header({ me }: { me: Founder }) {
         </Link>
         <div className="flex items-center gap-3">
           {me.is_admin && (
-            <Link href="/laura" className="label hover:text-accent-deep" style={{ color: "#56565e" }}>Laura&apos;s view</Link>
+            <Link href="/laura" className="btn btn-sm btn-primary no-underline">Laura&apos;s view</Link>
           )}
           <span className="text-sm font-medium">{displayName(me)}</span>
           <form action={signOut}>

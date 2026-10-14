@@ -12,7 +12,7 @@ export function readQuery(sp: RawQuery): ListQuery {
     sort: sp.sort === "replies" ? "replies" : "recent",
     show: sp.show === "request" || sp.show === "update" ? sp.show : "all",
     page: Number.isFinite(page) && page > 0 ? page : 1,
-    view: sp.view === "list" ? "list" : "grid",
+    view: sp.view === "grid" ? "grid" : "list",
     q: typeof sp.q === "string" ? sp.q.trim().slice(0, 80) : "",
   };
 }
@@ -22,7 +22,7 @@ export function hrefFor(base: string, q: ListQuery, change: Partial<ListQuery>) 
   const p = new URLSearchParams();
   if (next.sort !== "recent") p.set("sort", next.sort);
   if (next.show !== "all") p.set("show", next.show);
-  if (next.view !== "grid") p.set("view", next.view);
+  if (next.view !== "list") p.set("view", next.view);
   if (next.q) p.set("q", next.q);
   if (next.page > 1) p.set("page", String(next.page));
   const s = p.toString();
@@ -36,7 +36,7 @@ export function SearchBar({ base, q, found }: { base: string; q: ListQuery; foun
       <form action={base} method="get" role="search" className="flex flex-wrap gap-2">
         {q.sort !== "recent" && <input type="hidden" name="sort" value={q.sort} />}
         {q.show !== "all" && <input type="hidden" name="show" value={q.show} />}
-        {q.view !== "grid" && <input type="hidden" name="view" value={q.view} />}
+        {q.view !== "list" && <input type="hidden" name="view" value={q.view} />}
         <label htmlFor="q" className="sr-only">Search posts</label>
         <input id="q" name="q" type="search" defaultValue={q.q} maxLength={80} className="input min-w-0 flex-1" style={{ maxWidth: 520 }} placeholder="Search posts, founders or startups" />
         <button type="submit" className="btn btn-primary">Search</button>
@@ -49,7 +49,7 @@ export function SearchBar({ base, q, found }: { base: string; q: ListQuery; foun
 
 /** Switches the board between cards and full-width rows. */
 export function ViewToggle({ base, q }: { base: string; q: ListQuery }) {
-  const views = [["grid", "Cards"], ["list", "List"]] as const;
+  const views = [["list", "List"], ["grid", "Cards"]] as const;
   return (
     <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Layout">
       <span className="label" style={{ color: "#56565e" }}>Layout</span>
