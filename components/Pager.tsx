@@ -113,14 +113,14 @@ export function Pager({ base, q, pages }: { base: string; q: ListQuery; pages: n
 }
 
 /** Filters, sorts and cuts one page out of the full list. */
-export function slicePage<T extends { kind: string; created_at: string; group_id?: string }>(everything: T[], q: ListQuery, replies: (row: T) => number, text?: (row: T) => string) {
+export function slicePage<T extends { kind: string; created_at: string; group_id?: string }>(everything: T[], q: ListQuery, replies: (row: T) => number, text?: (row: T) => string, size = PAGE_SIZE) {
   const needle = q.q.toLowerCase();
   const inGroup = q.group ? everything.filter((r) => r.group_id === q.group) : everything;
   const all = needle && text ? inGroup.filter((r) => text(r).toLowerCase().includes(needle)) : inGroup;
   const counts = { all: all.length, request: all.filter((r) => r.kind === "request").length, update: all.filter((r) => r.kind === "update").length };
   const shown = q.show === "all" ? all : all.filter((r) => r.kind === q.show);
   const sorted = q.sort === "replies" ? [...shown].sort((a, b) => replies(b) - replies(a) || b.created_at.localeCompare(a.created_at)) : shown;
-  const pages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const pages = Math.max(1, Math.ceil(sorted.length / size));
   const page = Math.min(q.page, pages);
-  return { counts, pages, query: { ...q, page }, rows: sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) };
+  return { counts, pages, query: { ...q, page }, rows: sorted.slice((page - 1) * size, page * size) };
 }
