@@ -2,9 +2,9 @@ import Link from "next/link";
 
 export const PAGE_SIZE = 12;
 
-export type ListQuery = { sort: "recent" | "replies"; show: "all" | "request" | "update"; page: number; view: "grid" | "list"; q: string };
+export type ListQuery = { sort: "recent" | "replies"; show: "all" | "request" | "update"; page: number; view: "grid" | "list"; q: string; group: string };
 
-export type RawQuery = { sort?: string; show?: string; page?: string; view?: string; q?: string };
+export type RawQuery = { sort?: string; show?: string; page?: string; view?: string; q?: string; group?: string };
 
 export function readQuery(sp: RawQuery): ListQuery {
   const page = Number.parseInt(sp.page ?? "1", 10);
@@ -14,6 +14,7 @@ export function readQuery(sp: RawQuery): ListQuery {
     page: Number.isFinite(page) && page > 0 ? page : 1,
     view: sp.view === "grid" ? "grid" : "list",
     q: typeof sp.q === "string" ? sp.q.trim().slice(0, 80) : "",
+    group: typeof sp.group === "string" && /^[0-9a-f-]{36}$/i.test(sp.group) ? sp.group : "",
   };
 }
 
@@ -23,6 +24,7 @@ export function hrefFor(base: string, q: ListQuery, change: Partial<ListQuery>) 
   if (next.sort !== "recent") p.set("sort", next.sort);
   if (next.show !== "all") p.set("show", next.show);
   if (next.view !== "list") p.set("view", next.view);
+  if (next.group) p.set("group", next.group);
   if (next.q) p.set("q", next.q);
   if (next.page > 1) p.set("page", String(next.page));
   const s = p.toString();
@@ -37,6 +39,7 @@ export function SearchBar({ base, q, found }: { base: string; q: ListQuery; foun
         {q.sort !== "recent" && <input type="hidden" name="sort" value={q.sort} />}
         {q.show !== "all" && <input type="hidden" name="show" value={q.show} />}
         {q.view !== "list" && <input type="hidden" name="view" value={q.view} />}
+        {q.group && <input type="hidden" name="group" value={q.group} />}
         <label htmlFor="q" className="sr-only">Search posts</label>
         <input id="q" name="q" type="search" defaultValue={q.q} maxLength={80} className="input min-w-0 flex-1" style={{ maxWidth: 520 }} placeholder="Search posts, founders or startups" />
         <button type="submit" className="btn btn-primary">Search</button>
@@ -110,9 +113,10 @@ export function Pager({ base, q, pages }: { base: string; q: ListQuery; pages: n
 }
 
 /** Filters, sorts and cuts one page out of the full list. */
-export function slicePage<T extends { kind: string; created_at: string }>(everything: T[], q: ListQuery, replies: (row: T) => number, text?: (row: T) => string) {
+export function slicePage<T extends { kind: string; created_at: string; group_id?: string }>(everything: T[], q: ListQuery, replies: (row: T) => number, text?: (row: T) => string) {
   const needle = q.q.toLowerCase();
-  const all = needle && text ? everything.filter((r) => text(r).toLowerCase().includes(needle)) : everything;
+  const inGroup = q.group ? everything.filter((r) => r.group_id === q.group) : everything;
+  const all = needle && text ? inGroup.filter((r) => text(r).toLowerCase().includes(needle)) : inGroup;
   const counts = { all: all.length, request: all.filter((r) => r.kind === "request").length, update: all.filter((r) => r.kind === "update").length };
   const shown = q.show === "all" ? all : all.filter((r) => r.kind === q.show);
   const sorted = q.sort === "replies" ? [...shown].sort((a, b) => replies(b) - replies(a) || b.created_at.localeCompare(a.created_at)) : shown;

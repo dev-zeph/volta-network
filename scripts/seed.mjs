@@ -28,36 +28,36 @@ const founders = rows.map((r) => {
 const E = Object.fromEntries(founders.map((f) => [f.key, f.email]));
 
 const posts = [
-  { by: "ana", kind: "request", d: [13, 4], body: "We are about to sign our first clinic group with more than five locations and I do not know how to price it. Per location feels too expensive for them, a flat fee feels too cheap for us.\n\nHas anyone priced for customers with many sites?" },
-  { by: "theo", kind: "request", d: [13, 1], body: "Larger clinic groups keep sending us security questionnaires with 200 or more questions. Each one takes me days. How do other small teams handle these without a full-time security person?" },
-  { by: "mira", kind: "request", d: [12, 6], body: "We are opening a small sales office in Boston. What is the simplest way to hire and pay staff in the US from a Canadian company? Did you set up a US entity first or use a service?" },
-  { by: "desmond", kind: "request", d: [12, 2], body: "Has anyone sold to a port authority? We are stuck in procurement and I cannot tell who actually makes the decision or how long it should take." },
-  { by: "leila", kind: "request", d: [11, 5], body: "We have grown on revenue to 22 people and are preparing our first institutional round to expand into Ontario. What surprised you most the first time you raised from investors?" },
-  { by: "owen", kind: "update", d: [11, 1], body: "Interviewed 9 of 20 contractors so far about how they quote jobs. Most do it at night on a spreadsheet, and several said they lose jobs because the quote goes out two days late. That lateness is the problem I want to solve." },
-  { by: "colm", kind: "request", d: [10, 7], body: "We have staff in three provinces now. Has anyone set up group benefits across provinces? I am trying to find out whether one plan can cover everyone or whether we need a broker." },
-  { by: "jordan", kind: "request", d: [10, 2], body: "Applying for IRAP for the first time. I am based in Charlottetown and have never written a grant. What does the first conversation with an IRAP advisor look like, and what should I have ready?" },
-  { by: "anjali", kind: "request", d: [9, 8], body: "We are 14 staff and still run HR and payroll on spreadsheets. We are hiring three nurses and a sales lead, so it is time for a real platform. Which one did you pick, and would you pick it again?" },
-  { by: "arjun", kind: "update", d: [9, 3], body: "Sea trials of our second hull-cleaning prototype started this week in Halifax harbour. The robot held to the hull for a full 40 minute run. Next test is in rougher water." },
-  { by: "owen", kind: "request", d: [8, 6], body: "I am still working full-time as a construction project manager while I test this idea. How did you know it was time to quit your job and go all in?" },
-  { by: "luc", kind: "request", d: [8, 1], body: "Hiring our first salesperson outside Atlantic Canada. Commission, salary, or a mix? I would like to hear what you tried and what you would do differently." },
-  { by: "grace", kind: "request", d: [7, 5], body: "We are responding to our first school board RFP. The approval steps are long and I am not sure which parts matter most. Has anyone been through a public sector RFP?" },
-  { by: "rosalie", kind: "request", d: [7, 1], body: "A national grocer wants to list our chowders, which is great, but the first order is bigger than anything we have produced. How do you cover ingredients and co-packer costs before the grocer pays?" },
-  { by: "leah", kind: "update", d: [6, 7], body: "Sent our 41st grant application this week, this time for a customer and not for us. Two free trial users moved to paid plans after their first approved grant." },
-  { by: "arjun", kind: "request", d: [6, 2], body: "Pre-seed investors keep comparing our timeline to software companies. How do you explain hardware timelines so an 18 month build does not sound like a red flag?" },
-  { by: "tomasz", kind: "request", d: [5, 8], body: "Writing the job post for our first salesperson. Who did you hire first: someone senior who has done it before, or someone junior who is hungry? And how did you pay them?" },
-  { by: "leah", kind: "request", d: [5, 3], body: "Stuck on pricing: per seat or per grant application? Nonprofits have small teams but send a lot of applications. What did you learn when you changed how you charge?" },
-  { by: "siobhan", kind: "request", d: [4, 9], body: "We are about to close our first US customer, in Maine. What do I need to know about cross-border tax and contracts before I sign? I am in St. John's and doing this for the first time." },
-  { by: "felix", kind: "request", d: [4, 4], body: "We are two people, pre-revenue, lab testing lower-carbon concrete with a university partner. Which grants should we apply for first: IRAP or provincial funding?" },
-  { by: "grace", kind: "update", d: [3, 9], body: "Our waitlist passed 3,000 parents before launch. What worked: one short video of a child reading aloud, shared in parent groups. Paid ads did very little." },
-  { by: "imani", kind: "request", d: [3, 5], body: "I was an ER nurse for ten years and I am building a sleep coaching app with a contract developer. I would like a technical co-founder. Where did you find yours, or your first developer?" },
-  { by: "kiran", kind: "request", d: [3, 1], body: "Our first enterprise contract is with a national insurer. Their security review and legal process has taken two months so far. What helped you get through a big company's review faster?" },
-  { by: "josie", kind: "request", d: [2, 8], body: "Looking for a US distributor in New England for our wild blueberry snacks. I also need to get our labels ready for the FDA. Has anyone taken a food product into the US?" },
-  { by: "ewan", kind: "request", d: [2, 3], body: "Closing a pre-seed round. How often do you send investor updates, and what do you put in them? I am also still looking for a lead investor." },
-  { by: "desmond", kind: "update", d: [1, 20], body: "Hiring two more sales reps at Brinewater. Our first rep took four months to ramp, so this time we are writing down the first 30 days before anyone starts." },
-  { by: "sofia", kind: "request", d: [1, 9], body: "We are hiring our first US-based account manager. Which HR and payroll platforms handle both Canadian and US staff well?" },
-  { by: "mateo", kind: "request", d: [1, 3], body: "Revenue drops hard between game releases. How do other product companies smooth out income between launches?" },
-  { by: "amara", kind: "request", d: [0, 9], body: "We are at 50k downloads and everything is free. When did you add a paid tier, and how did your users react?" },
-  { by: "tomasz", kind: "update", d: [0, 3], body: "We moved 11 of our long-term care customers from monthly to annual contracts this quarter. Offering one free month and a fixed price for the year was enough." },
+  { by: "ana", group: "Pricing", kind: "request", d: [13, 4], body: "We are about to sign our first clinic group with more than five locations and I do not know how to price it. Per location feels too expensive for them, a flat fee feels too cheap for us.\n\nHas anyone priced for customers with many sites?" },
+  { by: "theo", group: "Product and tech", kind: "request", d: [13, 1], body: "Larger clinic groups keep sending us security questionnaires with 200 or more questions. Each one takes me days. How do other small teams handle these without a full-time security person?" },
+  { by: "mira", group: "Expansion", kind: "request", d: [12, 6], body: "We are opening a small sales office in Boston. What is the simplest way to hire and pay staff in the US from a Canadian company? Did you set up a US entity first or use a service?" },
+  { by: "desmond", group: "Sales", kind: "request", d: [12, 2], body: "Has anyone sold to a port authority? We are stuck in procurement and I cannot tell who actually makes the decision or how long it should take." },
+  { by: "leila", group: "Fundraising", kind: "request", d: [11, 5], body: "We have grown on revenue to 22 people and are preparing our first institutional round to expand into Ontario. What surprised you most the first time you raised from investors?" },
+  { by: "owen", group: "First customers", kind: "update", d: [11, 1], body: "Interviewed 9 of 20 contractors so far about how they quote jobs. Most do it at night on a spreadsheet, and several said they lose jobs because the quote goes out two days late. That lateness is the problem I want to solve." },
+  { by: "colm", group: "Hiring", kind: "request", d: [10, 7], body: "We have staff in three provinces now. Has anyone set up group benefits across provinces? I am trying to find out whether one plan can cover everyone or whether we need a broker." },
+  { by: "jordan", group: "Grants", kind: "request", d: [10, 2], body: "Applying for IRAP for the first time. I am based in Charlottetown and have never written a grant. What does the first conversation with an IRAP advisor look like, and what should I have ready?" },
+  { by: "anjali", group: "Hiring", kind: "request", d: [9, 8], body: "We are 14 staff and still run HR and payroll on spreadsheets. We are hiring three nurses and a sales lead, so it is time for a real platform. Which one did you pick, and would you pick it again?" },
+  { by: "arjun", group: "Product and tech", kind: "update", d: [9, 3], body: "Sea trials of our second hull-cleaning prototype started this week in Halifax harbour. The robot held to the hull for a full 40 minute run. Next test is in rougher water." },
+  { by: "owen", group: "First customers", kind: "request", d: [8, 6], body: "I am still working full-time as a construction project manager while I test this idea. How did you know it was time to quit your job and go all in?" },
+  { by: "luc", group: "Hiring", kind: "request", d: [8, 1], body: "Hiring our first salesperson outside Atlantic Canada. Commission, salary, or a mix? I would like to hear what you tried and what you would do differently." },
+  { by: "grace", group: "Sales", kind: "request", d: [7, 5], body: "We are responding to our first school board RFP. The approval steps are long and I am not sure which parts matter most. Has anyone been through a public sector RFP?" },
+  { by: "rosalie", group: "Sales", kind: "request", d: [7, 1], body: "A national grocer wants to list our chowders, which is great, but the first order is bigger than anything we have produced. How do you cover ingredients and co-packer costs before the grocer pays?" },
+  { by: "leah", group: "Grants", kind: "update", d: [6, 7], body: "Sent our 41st grant application this week, this time for a customer and not for us. Two free trial users moved to paid plans after their first approved grant." },
+  { by: "arjun", group: "Fundraising", kind: "request", d: [6, 2], body: "Pre-seed investors keep comparing our timeline to software companies. How do you explain hardware timelines so an 18 month build does not sound like a red flag?" },
+  { by: "tomasz", group: "Hiring", kind: "request", d: [5, 8], body: "Writing the job post for our first salesperson. Who did you hire first: someone senior who has done it before, or someone junior who is hungry? And how did you pay them?" },
+  { by: "leah", group: "Pricing", kind: "request", d: [5, 3], body: "Stuck on pricing: per seat or per grant application? Nonprofits have small teams but send a lot of applications. What did you learn when you changed how you charge?" },
+  { by: "siobhan", group: "Expansion", kind: "request", d: [4, 9], body: "We are about to close our first US customer, in Maine. What do I need to know about cross-border tax and contracts before I sign? I am in St. John's and doing this for the first time." },
+  { by: "felix", group: "Grants", kind: "request", d: [4, 4], body: "We are two people, pre-revenue, lab testing lower-carbon concrete with a university partner. Which grants should we apply for first: IRAP or provincial funding?" },
+  { by: "grace", group: "First customers", kind: "update", d: [3, 9], body: "Our waitlist passed 3,000 parents before launch. What worked: one short video of a child reading aloud, shared in parent groups. Paid ads did very little." },
+  { by: "imani", group: "Product and tech", kind: "request", d: [3, 5], body: "I was an ER nurse for ten years and I am building a sleep coaching app with a contract developer. I would like a technical co-founder. Where did you find yours, or your first developer?" },
+  { by: "kiran", group: "Sales", kind: "request", d: [3, 1], body: "Our first enterprise contract is with a national insurer. Their security review and legal process has taken two months so far. What helped you get through a big company's review faster?" },
+  { by: "josie", group: "Expansion", kind: "request", d: [2, 8], body: "Looking for a US distributor in New England for our wild blueberry snacks. I also need to get our labels ready for the FDA. Has anyone taken a food product into the US?" },
+  { by: "ewan", group: "Fundraising", kind: "request", d: [2, 3], body: "Closing a pre-seed round. How often do you send investor updates, and what do you put in them? I am also still looking for a lead investor." },
+  { by: "desmond", group: "Hiring", kind: "update", d: [1, 20], body: "Hiring two more sales reps at Brinewater. Our first rep took four months to ramp, so this time we are writing down the first 30 days before anyone starts." },
+  { by: "sofia", group: "Hiring", kind: "request", d: [1, 9], body: "We are hiring our first US-based account manager. Which HR and payroll platforms handle both Canadian and US staff well?" },
+  { by: "mateo", group: "Pricing", kind: "request", d: [1, 3], body: "Revenue drops hard between game releases. How do other product companies smooth out income between launches?" },
+  { by: "amara", group: "Pricing", kind: "request", d: [0, 9], body: "We are at 50k downloads and everything is free. When did you add a paid tier, and how did your users react?" },
+  { by: "tomasz", group: "Pricing", kind: "update", d: [0, 3], body: "We moved 11 of our long-term care customers from monthly to annual contracts this quarter. Offering one free month and a fixed price for the year was enough." },
 ];
 const P = (by, start) => posts.findIndex((p) => p.by === by && p.body.startsWith(start));
 
@@ -116,10 +116,19 @@ if (oldEmails.length) {
   console.log(`removed ${oldEmails.length} made-up founders and ${ids.length} posts`);
 }
 
+// Laura's groups. Existing ones are kept; any missing are added.
+const GROUPS = ["Product launch", "First customers", "Pricing", "Sales", "Hiring", "Fundraising", "Grants", "Product and tech", "Expansion"];
+const { data: have, error: ge } = await db.from("groups").select("id,name");
+check("read groups", ge);
+const missing = GROUPS.filter((g) => !have.some((h) => h.name.toLowerCase() === g.toLowerCase()));
+if (missing.length) check("groups", (await db.from("groups").insert(missing.map((name) => ({ name })))).error);
+const { data: groups } = await db.from("groups").select("id,name");
+const groupId = (name) => groups.find((g) => g.name.toLowerCase() === name.toLowerCase()).id;
+
 check("founders", (await db.from("founders").insert(founders.map(({ email, name, startup }) => ({ email, name, startup })))).error);
 const { data: made, error: me } = await db
   .from("posts")
-  .insert(posts.map((p) => ({ author_email: E[p.by], kind: p.kind, body: p.body, created_at: ago(...p.d) })))
+  .insert(posts.map((p) => ({ author_email: E[p.by], group_id: groupId(p.group), kind: p.kind, body: p.body, created_at: ago(...p.d) })))
   .select("id,body");
 check("posts", me);
 const idOf = (i) => made.find((x) => x.body === posts[i].body).id;

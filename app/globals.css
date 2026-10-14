@@ -122,3 +122,6 @@ table.t td.num { font-family: var(--font-mono); text-align: right; }
   .row[open] .row-text { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .row-chevron { transition: none; } }
+
+.group-tag { font-family: var(--font-condensed); font-weight: 600; text-transform: uppercase; letter-spacing: .1em; font-size: 12px; color: #17171a; background: #edeae5; padding: 5px 8px 4px; text-decoration: none; position: relative; z-index: 1; }
+.group-tag:hover { background: #f1ebfe; color: #6d28d9; }

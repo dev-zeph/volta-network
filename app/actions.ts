@@ -84,7 +84,7 @@ export async function saveProfile(_prev: { error?: string }, formData: FormData)
   redirect("/");
 }
 
-export async function createPost(input: { kind: string; body: string }): Promise<Result> {
+export async function createPost(input: { kind: string; body: string; groupId: string }): Promise<Result> {
   const me = await getFounder();
   if (!me) return { ok: false, error: "Please sign in again." };
   const body = clean(input?.body, 2000);
@@ -92,8 +92,24 @@ export async function createPost(input: { kind: string; body: string }): Promise
   if (kind !== "update" && kind !== "request") return { ok: false, error: "Pick Update or Request." };
   if (!body) return { ok: false, error: "Write something first." };
   if (body.length > 2000) return { ok: false, error: "That is over 2000 characters." };
-  const { error } = await db.from("posts").insert({ author_email: me.email, kind, body });
+  const groupId = typeof input?.groupId === "string" && UUID.test(input.groupId) ? input.groupId : "";
+  const { data: group } = groupId ? await db.from("groups").select("id").eq("id", groupId).maybeSingle() : { data: null };
+  if (!group) return { ok: false, error: "Pick a group for your post." };
+  const { error } = await db.from("posts").insert({ author_email: me.email, kind, body, group_id: group.id });
   if (error) return { ok: false, error: "Could not post that. Please try again." };
+  revalidatePath("/");
+  revalidatePath("/laura");
+  return { ok: true };
+}
+
+/** Laura (admins only) adds a group founders can post into. */
+export async function createGroup(_prev: { error?: string; ok?: boolean }, formData: FormData): Promise<{ error?: string; ok?: boolean }> {
+  const me = await getFounder();
+  if (!me?.is_admin) return { error: "Only Laura can add groups." };
+  const name = clean(formData.get("name"), 40).replace(/\s+/g, " ");
+  if (!name || name.length > 40) return { error: "Give the group a name (40 characters or fewer)." };
+  const { error } = await db.from("groups").insert({ name });
+  if (error) return { error: error.code === "23505" ? "That group already exists." : "Could not add that group." };
   revalidatePath("/");
   revalidatePath("/laura");
   return { ok: true };

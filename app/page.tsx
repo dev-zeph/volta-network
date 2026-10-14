@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ChevronDown, MessageSquare } from "lucide-react";
 import { db } from "@/lib/db";
@@ -7,12 +8,13 @@ import { Header } from "@/components/Header";
 import { Composer } from "@/components/Composer";
 import { CommentForm } from "@/components/CommentForm";
 import { TalkButton } from "@/components/TalkButton";
-import { ListControls, Pager, SearchBar, readQuery, slicePage, type RawQuery } from "@/components/Pager";
+import { ListControls, Pager, SearchBar, hrefFor, readQuery, slicePage, type RawQuery } from "@/components/Pager";
 
 type Person = { name: string | null; startup: string | null; email: string } | null;
 type Post = {
   id: string;
   kind: "update" | "request";
+  group_id: string;
   body: string;
   created_at: string;
   author_email: string;
@@ -21,7 +23,7 @@ type Post = {
 };
 
 const SELECT =
-  "id,kind,body,created_at,author_email,author:founders!author_email(name,startup,email)," +
+  "id,kind,group_id,body,created_at,author_email,author:founders!author_email(name,startup,email)," +
   "comments(id,body,created_at,author_email,author:founders!author_email(name,startup,email))";
 
 function calendarUrl(me: { name: string | null; email: string }, post: Post) {
@@ -48,6 +50,10 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
     .order("created_at", { referencedTable: "comments", ascending: true })
     .limit(500);
   const all = (data ?? []) as unknown as Post[];
+  const { data: groupRows } = await db.from("groups").select("id,name").order("name");
+  const groups = (groupRows ?? []) as { id: string; name: string }[];
+  const groupName = new Map(groups.map((g) => [g.id, g.name]));
+  const perGroup = (id: string) => all.filter((p) => p.group_id === id).length;
   const { rows: posts, counts, pages, query } = slicePage(
     all,
     readQuery(await searchParams),
@@ -58,6 +64,10 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
   const kindTag = (post: Post) => (
     <span className={`tag ${post.kind === "request" ? "tag-request" : "tag-update"}`}>{post.kind === "request" ? "Request" : "Update"}</span>
   );
+  const groupTag = (post: Post) =>
+    groupName.has(post.group_id) && (
+      <Link href={hrefFor("/", query, { group: post.group_id, page: 1 })} className="group-tag">{groupName.get(post.group_id)}</Link>
+    );
   const commentList = (post: Post) =>
     post.comments.length > 0 && (
       <ul className="grid gap-3 border-t border-line pt-4" aria-label="Comments">
@@ -89,17 +99,30 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
         <div className="wrap flex flex-col items-start gap-6 py-12 md:py-16">
           <p className="label" style={{ color: "#f1ebfe" }}>The board</p>
           <h1 className="max-w-[20ch] text-4xl md:text-6xl">See what other founders are working through</h1>
-          <Composer />
+          <Composer groups={groups} initialGroup={query.group} />
         </div>
       </section>
       <main className="wrap py-10">
+        {groups.length > 0 && (
+          <nav className="mb-6" aria-label="Groups">
+            <p className="label mb-3" style={{ color: "#56565e" }}>Groups</p>
+            <div className="flex flex-wrap gap-2">
+              <Link href={hrefFor("/", query, { group: "", page: 1 })} aria-current={!query.group ? "true" : undefined} className={`btn btn-sm ${!query.group ? "btn-primary" : "btn-secondary"}`}>All groups ({all.length})</Link>
+              {groups.map((g) => (
+                <Link key={g.id} href={hrefFor("/", query, { group: g.id, page: 1 })} aria-current={query.group === g.id ? "true" : undefined} className={`btn btn-sm ${query.group === g.id ? "btn-primary" : "btn-secondary"}`}>
+                  {g.name} ({perGroup(g.id)})
+                </Link>
+              ))}
+            </div>
+          </nav>
+        )}
         {(all.length > 0 || query.q) && <SearchBar base="/" q={query} found={counts.all} />}
         {counts.all > 0 && <ListControls base="/" q={query} counts={counts} layout />}
         {all.length === 0 ? (
           <div className="card mx-auto max-w-lg text-center">
             <h2 className="mb-2 text-2xl">The board is quiet</h2>
             <p className="mb-5" style={{ color: "#56565e" }}>Be the first to share what you are working on, or ask the network a question.</p>
-            <Composer variant="plain" />
+            <Composer variant="plain" groups={groups} />
           </div>
         ) : query.view === "list" ? (
           <div className="grid gap-3">
@@ -108,6 +131,7 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
                 <summary>
                   <span className="row-meta">
                     {kindTag(post)}
+                    {groupTag(post)}
                     <span className="font-semibold">{nameOf(post)}</span>
                     {post.author?.startup && <span className="label" style={{ color: "#56565e", fontWeight: 500 }}>{post.author.startup}</span>}
                   </span>
@@ -131,7 +155,7 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
             {posts.map((post) => (
               <article key={post.id} id={`post-${post.id}`} className="card flex flex-col gap-4">
                 <div className="flex items-center justify-between gap-3">
-                  {kindTag(post)}
+                  <span className="flex flex-wrap items-center gap-2">{kindTag(post)}{groupTag(post)}</span>
                   <time className="mono" dateTime={post.created_at}>{timeAgo(post.created_at)}</time>
                 </div>
                 <div>
@@ -145,7 +169,7 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
             ))}
           </div>
         )}
-        {all.length > 0 && posts.length === 0 && !query.q && <p style={{ color: "#56565e" }}>Nothing here yet.</p>}
+        {all.length > 0 && posts.length === 0 && !query.q && <p style={{ color: "#56565e" }}>Nothing in this group yet. Be the first to post here.</p>}
         <Pager base="/" q={query} pages={pages} />
       </main>
     </>
